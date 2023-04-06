@@ -1,0 +1,106 @@
+import os
+import numpy as np
+import pandas as pd
+import pickle
+import tensorflow as tf
+from google.cloud import storage
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+# Set up the GCP storage client
+storage_client = storage.Client()
+bucket_name = "jyp1024"
+model_path = "Chatbot2.h5"
+model_file = "/tmp/Chatbot.h5"
+
+tokenizer_model_path = "tokenizer.pkl"
+tokenizer_model_file = "/tmp/tokenizer.pkl"
+
+# Define the Cloud Function
+def hello_world(request):
+    model_bucket = storage_client.get_bucket(bucket_name)
+    model_blob = model_bucket.blob(model_path)
+    model_blob.download_to_filename(model_file)
+    model = load_model(model_file)
+
+    tokenizer_bucket = storage_client.get_bucket(bucket_name)
+    tokenizer_blob = tokenizer_bucket.blob(tokenizer_model_path)
+    tokenizer_blob.download_to_filename(tokenizer_model_file)
+    with open(tokenizer_model_file, 'rb') as handle:
+        tokenizer = pickle.load(handle)
+        
+    # Load the model and tokenizer
+    # Get the input text from the request
+    request_json = request.get_json()
+    input_text = request_json.get('message')
+
+    # Preprocess the input text
+    max_sequence_length = 2000
+    sequences = tokenizer.texts_to_sequences(input_text)
+    padded_sequences = pad_sequences(sequences, maxlen=max_sequence_length)
+    input_data = padded_sequences
+
+    # Make a prediction using the model
+    prediction = model.predict(input_data)
+
+    # Format the prediction as a JSON response
+    #response = {'prediction': int(np.argmax(prediction))}
+    predicted_label = np.argmax(prediction)
+    return str(predicted_label)
+
+//////////////////////////////////////////
+
+import os
+import numpy as np
+import pandas as pd
+import pickle
+import tensorflow as tf
+from google.cloud import storage
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+# Set up the GCP storage client
+storage_client = storage.Client()
+bucket_name = "jyp1024"
+model_path = "Chatbot2.h5"
+model_file = "/tmp/Chatbot.h5"
+
+tokenizer_model_path = "tokenizer.pkl"
+tokenizer_model_file = "/tmp/tokenizer.pkl"
+
+# Define the Cloud Function
+def hello_world(request):
+    model_bucket = storage_client.get_bucket(bucket_name)
+    model_blob = model_bucket.blob(model_path)
+    model_blob.download_to_filename(model_file)
+    model = load_model(model_file)
+
+    tokenizer_bucket = storage_client.get_bucket(bucket_name)
+    tokenizer_blob = tokenizer_bucket.blob(tokenizer_model_path)
+    tokenizer_blob.download_to_filename(tokenizer_model_file)
+    with open(tokenizer_model_file, 'rb') as handle:
+        tokenizer = pickle.load(handle)
+        
+    # Load the model and tokenizer
+    # Get the input text from the request
+    request_json = request.get_json()
+    input_text = request_json.get('message')
+
+    # Preprocess the input text
+    max_sequence_length = 94
+    sequences = tokenizer.texts_to_sequences(input_text)
+    padded_sequences = pad_sequences(sequences, maxlen=max_sequence_length)
+    input_data = padded_sequences
+
+    # Make a prediction using the model
+    prediction = model.predict(input_data)
+
+    # Format the prediction as a JSON response
+    response = {'prediction': int(np.argmax(prediction))}
+    predicted_label = np.argmax(prediction)
+    return str(response)
+
+///////////////////////////////////////////////////
+
